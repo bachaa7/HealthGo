@@ -15,6 +15,7 @@ import RecommendationsPage from './pages/RecommendationsPage'
 import DefinitionsPage from './pages/DefinitionsPage'
 import KnowledgePage from './pages/KnowledgePage'
 import PrivacyPage from './pages/PrivacyPage'
+import CookieBanner from './components/CookieBanner'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -36,6 +37,7 @@ function ProtectedRoute({ children }) {
 
 function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -56,6 +58,8 @@ function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <CookieBanner />
+    </>
   )
 }
 
