@@ -4,9 +4,8 @@ import Sidebar from '../components/Sidebar'
 import Button from '../components/Button'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
 import { Link } from 'react-router-dom'
-import { apiPut, apiDelete } from '../utils/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
 import './AccountPage.css'
 
 export default function AccountPage() {
@@ -245,7 +244,7 @@ export default function AccountPage() {
                     <input
                       type="text"
                       className="form-input"
-                      value={new Date().getFullYear() - new Date(profileData.birthDate).getFullYear()}
+                      value={profileData.birthDate ? new Date().getFullYear() - new Date(profileData.birthDate).getFullYear() : '—'}
                       disabled
                     />
                   </div>
