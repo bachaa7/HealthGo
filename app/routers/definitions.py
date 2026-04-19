@@ -70,7 +70,7 @@ async def lookup_definition(concept_id: str):
 async def add_definition(data: AddDefinitionRequest):
     """Добавить определение понятия в OSTIS."""
     try:
-        from add_defiition import add_definition_to_concept
+        from add_definition import add_definition_to_concept
 
         success = await add_definition_to_concept(data.idtf, data.definition)
         if success:
