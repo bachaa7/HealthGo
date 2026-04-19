@@ -30,7 +30,7 @@ Zoch_bot/
     __init__.py
     auth.py                 # JWT-утилиты, хеширование паролей
     database.py             # SQLAlchemy engine, SessionLocal
-    models.py               # Модели User, Reminder
+    models.py               # Модели User, Reminder, WeightRecord
     calorie_calculator.py   # Формула Миффлина-Сан Жеора
     rag_system.py           # RAG: LangChain + Ollama
     rag_data_manager.py     # ChromaDB: векторный поиск
@@ -41,6 +41,7 @@ Zoch_bot/
       recommendations.py    # /api/recommendations/* — рекомендации
       definitions.py        # /api/definitions/* — OSTIS определения
       rag.py                # /api/rag/* — AI-ассистент, база знаний
+      weight.py             # /api/weight/* — история веса
 
   frontend/
     src/
@@ -225,6 +226,16 @@ API документация (Swagger): `http://localhost:8000/docs`.
 
 RAG-система: вопрос → поиск по ChromaDB (top-3) → формирование контекста → генерация ответа через Ollama (llama3.2).
 
+### История веса (`/api/weight`)
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| GET | `/api/weight/` | История веса пользователя (сортировка по дате) |
+| POST | `/api/weight/` | Добавить/обновить запись веса (по дате) |
+| DELETE | `/api/weight/{id}` | Удалить запись |
+
+При добавлении новой записи автоматически обновляется текущий вес пользователя в профиле. График динамики веса отображается во вкладке «Статистика» в аккаунте.
+
 ## Страницы фронтенда
 
 | Маршрут | Страница | Описание |
@@ -238,7 +249,7 @@ RAG-система: вопрос → поиск по ChromaDB (top-3) → фор
 | `/dashboard/ai-assistant` | ChatPage | AI-чат (RAG) |
 | `/dashboard/workouts` | WorkoutsPage | Тренировки с таймером |
 | `/dashboard/reminders` | RemindersPage | Напоминания (CRUD) |
-| `/dashboard/account` | AccountPage | Профиль + настройки |
+| `/dashboard/account` | AccountPage | Профиль + статистика (ИМТ, график веса) + настройки |
 | `/dashboard/recommendations` | RecommendationsPage | Рекомендации по питанию и привычкам |
 | `/dashboard/definitions` | DefinitionsPage | Определения из OSTIS |
 | `/dashboard/knowledge` | KnowledgePage | База знаний (RAG) |
@@ -257,8 +268,11 @@ RAG-система: вопрос → поиск по ChromaDB (top-3) → фор
 ### OSTIS-интеграция (`ostis_client.py` + `ostis_manager.py`)
 Подключение к sc-server через WebSocket. Создание семантических узлов, добавление определений через ролевые отношения (`nrel_definition`). Опциональная зависимость — приложение работает без OSTIS.
 
+### История веса (`app/routers/weight.py` + `app/models.py`)
+Модель `WeightRecord` (user_id, weight, date) хранит измерения веса в PostgreSQL. При добавлении записи обновляется текущий вес в профиле пользователя. На фронтенде — столбчатый график динамики веса во вкладке «Статистика».
+
 ### Аутентификация (`app/auth.py` + `app/routers/auth.py`)
-JWT-токены (python-jose), хеширование паролей (bcrypt), Google OAuth2 (google-auth). Модели User и Reminder хранятся в PostgreSQL через SQLAlchemy.
+JWT-токены (python-jose), хеширование паролей (bcrypt), Google OAuth2 (google-auth). Модели User, Reminder и WeightRecord хранятся в PostgreSQL через SQLAlchemy.
 
 ## Переменные окружения (.env)
 
@@ -267,7 +281,6 @@ JWT-токены (python-jose), хеширование паролей (bcrypt), 
 | `DATABASE_URL` | URL подключения к PostgreSQL | `postgresql://postgres:pass@localhost:5432/healthgo` |
 | `JWT_SECRET` | Секретный ключ для JWT-токенов | `my-super-secret-key` |
 | `GOOGLE_CLIENT_ID` | Client ID из Google Cloud Console | `123456.apps.googleusercontent.com` |
-| `BOT_TOKEN` | Токен Telegram-бота (устаревшее) | — |
 
 ## Опциональные зависимости
 
