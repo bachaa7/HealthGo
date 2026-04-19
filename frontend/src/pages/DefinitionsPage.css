@@ -1,0 +1,114 @@
+.def-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.def-description {
+  color: var(--text-light);
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+.def-concepts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.def-concept-card {
+  background: var(--white);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.def-concept-card:hover {
+  border-color: var(--primary-green);
+  box-shadow: var(--shadow);
+}
+
+.def-concept-card--active {
+  border-color: var(--primary-green);
+  background: var(--light-green);
+}
+
+.def-concept-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--light-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.def-concept-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--primary-green);
+}
+
+.def-concept-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.def-concept-id {
+  font-size: 12px;
+  color: var(--text-light);
+  font-family: monospace;
+}
+
+.def-result {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.def-result-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-dark);
+}
+
+.def-result-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+.def-result-loading {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+.def-result-error {
+  color: #f44336;
+}
+
+.def-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.def-add-success {
+  color: var(--primary-green);
+  font-weight: 500;
+}
+
+.def-add-error {
+  color: #f44336;
+  font-weight: 500;
+}

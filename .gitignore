@@ -1,0 +1,27 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Environment
+.env
+
+# Claude Code
+.claude/
+
+# Vector DB (генерируется локально)
+rag_vector_db/
+
+# Frontend build & deps
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Legacy
+py-sc-client/
+get_function
