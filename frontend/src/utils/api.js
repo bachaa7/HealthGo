@@ -19,7 +19,6 @@ export async function apiRequest(url, options = {}) {
 
   if (response.status === 401) {
     localStorage.removeItem('user')
-    window.location.href = '/login'
     throw new Error('Unauthorized')
   }
 

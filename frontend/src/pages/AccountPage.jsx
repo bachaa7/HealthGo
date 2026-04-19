@@ -419,31 +419,62 @@ export default function AccountPage() {
                 <h3 className="section-title section-title--margin">Динамика веса</h3>
                 {weightHistory.length > 1 ? (
                   <div className="stats-weight-chart">
-                    <div className="stats-chart-area">
-                      {(() => {
-                        const weights = weightHistory.map(r => r.weight)
-                        const minW = Math.min(...weights) - 2
-                        const maxW = Math.max(...weights) + 2
-                        const range = maxW - minW || 1
-                        return weightHistory.map((record, i) => {
-                          const percent = ((record.weight - minW) / range) * 100
-                          return (
-                            <div key={record.id} className="stats-chart-col">
-                              <div className="stats-chart-value">{record.weight}</div>
-                              <div className="stats-chart-bar-wrap">
-                                <div
-                                  className="stats-chart-bar"
-                                  style={{ height: `${Math.max(percent, 5)}%` }}
-                                />
-                              </div>
-                              <div className="stats-chart-date">
-                                {record.date.slice(5).replace('-', '.')}
-                              </div>
-                            </div>
-                          )
-                        })
-                      })()}
-                    </div>
+                    {(() => {
+                      const weights = weightHistory.map(r => r.weight)
+                      const minW = Math.min(...weights) - 2
+                      const maxW = Math.max(...weights) + 2
+                      const range = maxW - minW || 1
+                      const chartW = 600
+                      const chartH = 200
+                      const padX = 40
+                      const padY = 30
+                      const innerW = chartW - padX * 2
+                      const innerH = chartH - padY * 2
+
+                      const points = weightHistory.map((r, i) => ({
+                        x: padX + (innerW / (weightHistory.length - 1)) * i,
+                        y: padY + innerH - ((r.weight - minW) / range) * innerH,
+                        weight: r.weight,
+                        date: r.date.slice(5).replace('-', '.'),
+                      }))
+
+                      const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+                      const areaPath = linePath + ` L ${points[points.length-1].x} ${chartH - padY} L ${points[0].x} ${chartH - padY} Z`
+
+                      return (
+                        <svg viewBox={`0 0 ${chartW} ${chartH}`} className="stats-line-chart">
+                          {/* Горизонтальные линии */}
+                          {[0, 0.25, 0.5, 0.75, 1].map((frac, i) => {
+                            const y = padY + innerH * (1 - frac)
+                            const val = Math.round(minW + range * frac)
+                            return (
+                              <g key={i}>
+                                <line x1={padX} y1={y} x2={chartW - padX} y2={y} stroke="#e0e0e0" strokeWidth="1" />
+                                <text x={padX - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#999">{val}</text>
+                              </g>
+                            )
+                          })}
+                          {/* Заливка под кривой */}
+                          <path d={areaPath} fill="url(#greenGrad)" opacity="0.3" />
+                          {/* Линия */}
+                          <path d={linePath} fill="none" stroke="#4CAF50" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                          {/* Точки и подписи */}
+                          {points.map((p, i) => (
+                            <g key={i}>
+                              <circle cx={p.x} cy={p.y} r="5" fill="#4CAF50" stroke="white" strokeWidth="2" />
+                              <text x={p.x} y={p.y - 12} textAnchor="middle" fontSize="12" fontWeight="600" fill="#333">{p.weight}</text>
+                              <text x={p.x} y={chartH - 8} textAnchor="middle" fontSize="11" fill="#999">{p.date}</text>
+                            </g>
+                          ))}
+                          <defs>
+                            <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#4CAF50" stopOpacity="0.4" />
+                              <stop offset="100%" stopColor="#4CAF50" stopOpacity="0.05" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      )
+                    })()}
                   </div>
                 ) : weightHistory.length === 1 ? (
                   <p style={{ color: '#999' }}>Добавьте ещё одну запись для отображения графика</p>
