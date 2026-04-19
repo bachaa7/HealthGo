@@ -5,6 +5,8 @@ import Button from '../components/Button'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
+import { Link } from 'react-router-dom'
+import { apiPut, apiDelete } from '../utils/api'
 import './AccountPage.css'
 
 export default function AccountPage() {
@@ -84,8 +86,8 @@ export default function AccountPage() {
     }
   }
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/login')
   }
 
@@ -466,6 +468,39 @@ export default function AccountPage() {
                       <input type="checkbox" checked={isDark} onChange={toggleTheme} />
                       <span className="toggle-slider"></span>
                     </label>
+                  </div>
+                </div>
+
+                <h3 className="section-title section-title--margin">Персональные данные</h3>
+
+                <div className="settings-list">
+                  <div className="setting-item">
+                    <div className="setting-info">
+                      <span className="setting-label">Согласие на обработку данных</span>
+                      <span className="setting-description">
+                        Вы дали согласие при регистрации.{' '}
+                        <Link to="/privacy" className="auth-link">Политика конфиденциальности</Link>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="setting-item">
+                    <div className="setting-info">
+                      <span className="setting-label">Отозвать согласие</span>
+                      <span className="setting-description">
+                        Отзыв согласия приведёт к удалению аккаунта и всех данных
+                      </span>
+                    </div>
+                    <Button variant="danger" size="small" onClick={async () => {
+                      if (window.confirm('Вы отзываете согласие на обработку данных. Ваш аккаунт и все данные будут удалены. Продолжить?')) {
+                        try {
+                          await apiDelete('/api/auth/me')
+                          logout()
+                          navigate('/login')
+                        } catch {
+                          alert('Ошибка удаления')
+                        }
+                      }
+                    }}>Отозвать</Button>
                   </div>
                 </div>
 

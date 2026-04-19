@@ -46,7 +46,7 @@ export default function LoginPage() {
     setError('')
     try {
       const data = await apiPost('/api/auth/google', { credential: response.credential })
-      login(data.token, data.user)
+      login(data.user)
       navigate('/dashboard')
     } catch {
       setError('Ошибка входа через Google')
@@ -61,7 +61,7 @@ export default function LoginPage() {
     setError('')
     try {
       const data = await apiPost('/api/auth/login', { email, password })
-      login(data.token, data.user)
+      login(data.user)
       navigate('/dashboard')
     } catch {
       setError('Неверный email или пароль')

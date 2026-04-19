@@ -1,7 +1,7 @@
 """Роутер аутентификации: регистрация, логин, Google OAuth2, профиль."""
 
 import os
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field, EmailStr
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -13,6 +13,8 @@ from app.auth import (
     verify_password,
     create_jwt,
     get_current_user,
+    ACCESS_TOKEN_EXPIRE_DAYS,
+    COOKIE_NAME,
 )
 
 router = APIRouter(prefix="/api/auth", tags=["Аутентификация"])
@@ -42,11 +44,6 @@ class GoogleAuthRequest(BaseModel):
     credential: str = Field(..., description="Google ID-токен")
 
 
-class TokenResponse(BaseModel):
-    token: str
-    user: dict
-
-
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     gender: Optional[str] = Field(None, pattern="^(male|female)$")
@@ -58,6 +55,19 @@ class ProfileUpdateRequest(BaseModel):
 
 
 # ─────────────── Вспомогательные функции ───────────────
+
+def _set_token_cookie(response: Response, token: str):
+    """Установить JWT в httpOnly cookie."""
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,           # JavaScript не может прочитать
+        secure=False,            # True для HTTPS в продакшене
+        samesite="lax",          # Защита от CSRF
+        max_age=ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # 7 дней в секундах
+        path="/",
+    )
+
 
 def _user_to_dict(user: User) -> dict:
     return {
@@ -75,8 +85,8 @@ def _user_to_dict(user: User) -> dict:
 
 # ─────────────── Эндпоинты ───────────────
 
-@router.post("/register", response_model=TokenResponse)
-async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+@router.post("/register")
+async def register(data: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     """Регистрация нового пользователя (email + пароль)."""
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
@@ -97,11 +107,12 @@ async def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     token = create_jwt(user.id, user.email, user.name)
-    return TokenResponse(token=token, user=_user_to_dict(user))
+    _set_token_cookie(response, token)
+    return {"user": _user_to_dict(user)}
 
 
-@router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: Session = Depends(get_db)):
+@router.post("/login")
+async def login(data: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """Вход по email + пароль."""
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not user.password_hash:
@@ -110,11 +121,12 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
 
     token = create_jwt(user.id, user.email, user.name)
-    return TokenResponse(token=token, user=_user_to_dict(user))
+    _set_token_cookie(response, token)
+    return {"user": _user_to_dict(user)}
 
 
-@router.post("/google", response_model=TokenResponse)
-async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
+@router.post("/google")
+async def google_auth(data: GoogleAuthRequest, response: Response, db: Session = Depends(get_db)):
     """Вход / регистрация через Google OAuth2.
 
     Фронтенд получает Google ID-токен через Google Identity Services
@@ -157,7 +169,15 @@ async def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
         db.commit()
 
     token = create_jwt(user.id, user.email, user.name)
-    return TokenResponse(token=token, user=_user_to_dict(user))
+    _set_token_cookie(response, token)
+    return {"user": _user_to_dict(user)}
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """Выход — удаляет cookie."""
+    response.delete_cookie(key=COOKIE_NAME, path="/")
+    return {"detail": "Вы вышли из системы"}
 
 
 @router.get("/me")

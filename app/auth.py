@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 import bcrypt
 from sqlalchemy.orm import Session
@@ -19,8 +18,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
-
-security = HTTPBearer(auto_error=False)
+COOKIE_NAME = "access_token"
 
 
 # --------------- Пароли ---------------
@@ -54,21 +52,22 @@ def decode_jwt(token: str) -> dict:
 # --------------- FastAPI Depends ---------------
 
 async def get_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    request: Request,
     db: Session = Depends(get_db),
 ) -> User:
-    """Достаёт пользователя из JWT-токена.
+    """Достаёт пользователя из httpOnly cookie.
 
     Используется как Depends() в защищённых эндпоинтах.
     """
-    if credentials is None:
+    token = request.cookies.get(COOKIE_NAME)
+    if token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Требуется авторизация",
         )
 
     try:
-        payload = decode_jwt(credentials.credentials)
+        payload = decode_jwt(token)
         user_id = int(payload["sub"])
     except (JWTError, KeyError, ValueError):
         raise HTTPException(

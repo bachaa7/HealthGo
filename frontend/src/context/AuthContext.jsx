@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { apiGet } from '../utils/api'
+import { apiGet, apiPost } from '../utils/api'
 
 const AuthContext = createContext(null)
 
@@ -8,41 +8,35 @@ export function AuthProvider({ children }) {
     const saved = localStorage.getItem('user')
     return saved ? JSON.parse(saved) : null
   })
-  const [token, setToken] = useState(() => localStorage.getItem('token'))
   const [loading, setLoading] = useState(true)
 
-  // При загрузке проверяем токен
+  // При загрузке проверяем cookie — если есть, сервер вернёт пользователя
   useEffect(() => {
-    if (token) {
-      apiGet('/api/auth/me')
-        .then((data) => {
-          setUser(data)
-          localStorage.setItem('user', JSON.stringify(data))
-        })
-        .catch(() => {
-          // Токен невалидный
-          setToken(null)
-          setUser(null)
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-        })
-        .finally(() => setLoading(false))
-    } else {
-      setLoading(false)
-    }
+    apiGet('/api/auth/me')
+      .then((data) => {
+        setUser(data)
+        localStorage.setItem('user', JSON.stringify(data))
+      })
+      .catch(() => {
+        // Cookie нет или невалидный
+        setUser(null)
+        localStorage.removeItem('user')
+      })
+      .finally(() => setLoading(false))
   }, [])
 
-  const login = (newToken, userData) => {
-    setToken(newToken)
+  const login = (userData) => {
     setUser(userData)
-    localStorage.setItem('token', newToken)
     localStorage.setItem('user', JSON.stringify(userData))
   }
 
-  const logout = () => {
-    setToken(null)
+  const logout = async () => {
+    try {
+      await apiPost('/api/auth/logout')
+    } catch {
+      // Даже если сервер не ответил — чистим локально
+    }
     setUser(null)
-    localStorage.removeItem('token')
     localStorage.removeItem('user')
   }
 
@@ -54,9 +48,8 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user,
-      token,
       loading,
-      isAuthenticated: !!token && !!user,
+      isAuthenticated: !!user,
       login,
       logout,
       updateUser,
