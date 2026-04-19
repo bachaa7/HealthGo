@@ -23,14 +23,14 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 # ─────────────── Pydantic-модели ───────────────
 
 class RegisterRequest(BaseModel):
-    name: str = Field(..., min_length=1)
+    name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr = Field(...)
-    password: str = Field(..., min_length=6)
-    gender: Optional[str] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
-    birth_date: Optional[str] = None
-    activity_level: Optional[str] = "moderate"
+    password: str = Field(..., min_length=6, max_length=128)
+    gender: Optional[str] = Field(None, pattern="^(male|female)$")
+    height: Optional[float] = Field(None, ge=50, le=250, description="Рост в см (50-250)")
+    weight: Optional[float] = Field(None, ge=20, le=300, description="Вес в кг (20-300)")
+    birth_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="Формат YYYY-MM-DD")
+    activity_level: Optional[str] = Field("moderate", pattern="^(sedentary|light|moderate|active|very-active)$")
 
 
 class LoginRequest(BaseModel):
@@ -48,13 +48,13 @@ class TokenResponse(BaseModel):
 
 
 class ProfileUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    gender: Optional[str] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
-    birth_date: Optional[str] = None
-    activity_level: Optional[str] = None
-    phone: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    gender: Optional[str] = Field(None, pattern="^(male|female)$")
+    height: Optional[float] = Field(None, ge=50, le=250)
+    weight: Optional[float] = Field(None, ge=20, le=300)
+    birth_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    activity_level: Optional[str] = Field(None, pattern="^(sedentary|light|moderate|active|very-active)$")
+    phone: Optional[str] = Field(None, max_length=20)
 
 
 # ─────────────── Вспомогательные функции ───────────────
