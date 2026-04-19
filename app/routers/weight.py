@@ -40,24 +40,20 @@ async def add_weight(
 
     if existing:
         existing.weight = data.weight
-        db.commit()
-        db.refresh(existing)
-        return existing
+    else:
+        existing = WeightRecord(
+            user_id=current_user.id,
+            weight=data.weight,
+            date=data.date,
+        )
+        db.add(existing)
 
-    record = WeightRecord(
-        user_id=current_user.id,
-        weight=data.weight,
-        date=data.date,
-    )
-    db.add(record)
-    db.commit()
-    db.refresh(record)
-
-    # Обновить текущий вес пользователя
+    # Всегда обновляем текущий вес пользователя
     current_user.weight = data.weight
     db.commit()
+    db.refresh(existing)
 
-    return record
+    return existing
 
 
 @router.get("/", response_model=list[WeightOut])
