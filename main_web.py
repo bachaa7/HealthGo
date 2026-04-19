@@ -18,6 +18,7 @@ from app.routers.reminders import router as reminders_router
 from app.routers.recommendations import router as recommendations_router
 from app.routers.definitions import router as definitions_router
 from app.routers.rag import router as rag_router
+from app.routers.weight import router as weight_router
 
 FRONTEND_DIR = Path(__file__).parent / "frontend" / "dist"
 
@@ -66,6 +67,7 @@ app.include_router(reminders_router)
 app.include_router(recommendations_router)
 app.include_router(definitions_router)
 app.include_router(rag_router)
+app.include_router(weight_router)
 
 
 # --- Раздача фронтенда ---

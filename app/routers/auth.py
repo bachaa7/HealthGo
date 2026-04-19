@@ -213,9 +213,10 @@ async def delete_me(
     db: Session = Depends(get_db),
 ):
     """Удалить аккаунт текущего пользователя и все связанные данные."""
-    from app.models import Reminder
+    from app.models import Reminder, WeightRecord
 
-    # Удаляем напоминания пользователя
+    # Удаляем все данные пользователя
+    db.query(WeightRecord).filter(WeightRecord.user_id == current_user.id).delete()
     db.query(Reminder).filter(Reminder.user_id == current_user.id).delete()
     # Удаляем пользователя
     db.delete(current_user)
