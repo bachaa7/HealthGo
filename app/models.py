@@ -22,6 +22,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     reminders = relationship("Reminder", back_populates="user", cascade="all, delete-orphan")
+    weight_records = relationship("WeightRecord", back_populates="user", cascade="all, delete-orphan")
 
 
 class Reminder(Base):
@@ -35,3 +36,15 @@ class Reminder(Base):
     enabled = Column(Boolean, default=True)
 
     user = relationship("User", back_populates="reminders")
+
+
+class WeightRecord(Base):
+    __tablename__ = "weight_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    weight = Column(Float, nullable=False)
+    date = Column(String, nullable=False)  # "YYYY-MM-DD"
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship("User", back_populates="weight_records")
