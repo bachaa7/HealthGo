@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Button from '../components/Button'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { apiPut, apiDelete } from '../utils/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
 import './AccountPage.css'
 
 export default function AccountPage() {
@@ -28,6 +28,34 @@ export default function AccountPage() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  const [weightHistory, setWeightHistory] = useState([])
+  const [newWeight, setNewWeight] = useState('')
+  const [weightLoading, setWeightLoading] = useState(false)
+
+  useEffect(() => {
+    apiGet('/api/weight/')
+      .then(data => { if (Array.isArray(data)) setWeightHistory(data) })
+      .catch(() => {})
+  }, [])
+
+  const handleAddWeight = async () => {
+    if (!newWeight || newWeight < 20 || newWeight > 300) return
+    setWeightLoading(true)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      await apiPost('/api/weight/', { weight: Number(newWeight), date: today })
+      const data = await apiGet('/api/weight/')
+      if (Array.isArray(data)) setWeightHistory(data)
+      setProfileData({ ...profileData, weight: Number(newWeight) })
+      updateUser({ ...user, weight: Number(newWeight) })
+      setNewWeight('')
+    } catch {
+      alert('Ошибка сохранения веса')
+    } finally {
+      setWeightLoading(false)
+    }
+  }
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target
@@ -367,6 +395,60 @@ export default function AccountPage() {
                     <span>Макс: <strong>{Math.round(25 * (profileData.height/100)**2)} кг</strong></span>
                   </div>
                 </div>
+
+                {/* Обновить вес */}
+                <h3 className="section-title section-title--margin">Обновить вес</h3>
+                <div className="stats-weight-input">
+                  <input
+                    type="number"
+                    className="form-input"
+                    placeholder="Вес в кг"
+                    value={newWeight}
+                    onChange={(e) => setNewWeight(e.target.value)}
+                    min="20"
+                    max="300"
+                    step="0.1"
+                  />
+                  <Button variant="primary" size="medium" onClick={handleAddWeight} disabled={weightLoading}>
+                    {weightLoading ? 'Сохранение...' : 'Записать'}
+                  </Button>
+                </div>
+
+                {/* График веса */}
+                <h3 className="section-title section-title--margin">Динамика веса</h3>
+                {weightHistory.length > 1 ? (
+                  <div className="stats-weight-chart">
+                    <div className="stats-chart-area">
+                      {(() => {
+                        const weights = weightHistory.map(r => r.weight)
+                        const minW = Math.min(...weights) - 2
+                        const maxW = Math.max(...weights) + 2
+                        const range = maxW - minW || 1
+                        return weightHistory.map((record, i) => {
+                          const percent = ((record.weight - minW) / range) * 100
+                          return (
+                            <div key={record.id} className="stats-chart-col">
+                              <div className="stats-chart-value">{record.weight}</div>
+                              <div className="stats-chart-bar-wrap">
+                                <div
+                                  className="stats-chart-bar"
+                                  style={{ height: `${Math.max(percent, 5)}%` }}
+                                />
+                              </div>
+                              <div className="stats-chart-date">
+                                {record.date.slice(5).replace('-', '.')}
+                              </div>
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                  </div>
+                ) : weightHistory.length === 1 ? (
+                  <p style={{ color: '#999' }}>Добавьте ещё одну запись для отображения графика</p>
+                ) : (
+                  <p style={{ color: '#999' }}>Нет записей. Введите вес выше чтобы начать отслеживание</p>
+                )}
               </div>
             )}
 
