@@ -15,7 +15,7 @@ export default function RecommendationsPage() {
         setFood(data.food)
         setHabits(data.habits)
       })
-      .catch(() => {})
+      .catch((err) => console.error('Не удалось загрузить рекомендации:', err.message))
       .finally(() => setLoading(false))
   }, [])
 

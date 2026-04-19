@@ -13,11 +13,11 @@ export default function DashboardPage() {
   useEffect(() => {
     apiGet('/api/reminders/').then(data => {
       if (Array.isArray(data)) setReminders(data.filter(r => r.enabled).slice(0, 4))
-    }).catch(() => {})
+    }).catch((err) => console.error('Не удалось загрузить напоминания:', err.message))
 
     apiGet('/api/recommendations/habits').then(data => {
       if (data.habits) setRecommendations(data.habits.slice(0, 3))
-    }).catch(() => {})
+    }).catch((err) => console.error('Не удалось загрузить рекомендации:', err.message))
   }, [])
 
   const getGreeting = () => {

@@ -16,7 +16,7 @@ export default function DefinitionsPage() {
   useEffect(() => {
     apiGet('/api/definitions/concepts')
       .then(data => setConcepts(data.concepts || []))
-      .catch(() => {})
+      .catch((err) => console.error('Не удалось загрузить понятия:', err.message))
   }, [])
 
   const handleLookup = async (concept) => {
