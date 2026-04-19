@@ -53,7 +53,7 @@ export default function RegisterParamsPage() {
         birth_date,
       })
       sessionStorage.removeItem('registerData')
-      login(data.token, data.user)
+      login(data.user)
       navigate('/dashboard')
     } catch (err) {
       setError('Ошибка регистрации. Возможно, email уже занят.')
