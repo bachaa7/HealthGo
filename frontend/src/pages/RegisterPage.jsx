@@ -13,6 +13,7 @@ export default function RegisterPage() {
     confirmPassword: '',
   })
   const [error, setError] = useState('')
+  const [agreed, setAgreed] = useState(false)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -87,8 +88,22 @@ export default function RegisterPage() {
             error={error}
             required
           />
+          <label className="agreement-checkbox">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            <span>
+              Я соглашаюсь с{' '}
+              <Link to="/privacy" target="_blank" className="auth-link">
+                Политикой конфиденциальности
+              </Link>{' '}
+              и даю согласие на обработку персональных данных
+            </span>
+          </label>
           <div className="auth-form-actions">
-            <Button type="submit" variant="primary" size="medium">
+            <Button type="submit" variant="primary" size="medium" disabled={!agreed}>
               Дальше
             </Button>
           </div>

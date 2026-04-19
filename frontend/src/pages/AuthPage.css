@@ -132,3 +132,24 @@
   display: flex;
   justify-content: center;
 }
+
+/* Agreement checkbox */
+.agreement-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.5;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.agreement-checkbox input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--primary-green);
+}

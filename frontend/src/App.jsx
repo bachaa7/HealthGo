@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import DefinitionsPage from './pages/DefinitionsPage'
 import KnowledgePage from './pages/KnowledgePage'
+import PrivacyPage from './pages/PrivacyPage'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -41,6 +42,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/register-params" element={<RegisterParamsPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/dashboard/nutrition" element={<ProtectedRoute><NutritionPage /></ProtectedRoute>} />
