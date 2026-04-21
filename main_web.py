@@ -72,14 +72,26 @@ app.include_router(weight_router)
 
 # --- Раздача фронтенда ---
 if FRONTEND_DIR.exists():
+    from fastapi.responses import HTMLResponse
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="static")
+
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+
+    def _inject_config(html: str) -> str:
+        """Вставляет window.__GOOGLE_CLIENT_ID__ перед </head>."""
+        config_script = (
+            f'<script>window.__GOOGLE_CLIENT_ID__ = "{GOOGLE_CLIENT_ID}";</script>'
+        )
+        return html.replace("</head>", f"  {config_script}\n</head>", 1)
 
     @app.get("/{full_path:path}", tags=["Frontend"])
     async def serve_frontend(request: Request, full_path: str):
         file_path = FRONTEND_DIR / full_path
         if full_path and file_path.exists() and file_path.is_file():
             return FileResponse(file_path)
-        return FileResponse(FRONTEND_DIR / "index.html")
+        index_path = FRONTEND_DIR / "index.html"
+        html_content = index_path.read_text(encoding="utf-8")
+        return HTMLResponse(_inject_config(html_content))
 else:
     @app.get("/", tags=["Общее"])
     async def root():

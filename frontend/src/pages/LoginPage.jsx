@@ -47,7 +47,12 @@ export default function LoginPage() {
     try {
       const data = await apiPost('/api/auth/google', { credential: response.credential })
       login(data.user)
-      navigate('/dashboard')
+      // Если профиль не заполнен — отправляем на страницу параметров
+      if (!data.user.height || !data.user.weight || !data.user.gender) {
+        navigate('/register-params')
+      } else {
+        navigate('/dashboard')
+      }
     } catch {
       setError('Ошибка входа через Google')
     } finally {

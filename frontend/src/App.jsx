@@ -11,6 +11,7 @@ import AccountPage from './pages/AccountPage'
 import WorkoutsPage from './pages/WorkoutsPage'
 import RemindersPage from './pages/RemindersPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import RecommendationsPage from './pages/RecommendationsPage'
 import DefinitionsPage from './pages/DefinitionsPage'
 import KnowledgePage from './pages/KnowledgePage'
@@ -44,6 +45,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/register-params" element={<RegisterParamsPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
