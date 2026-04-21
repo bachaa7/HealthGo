@@ -30,7 +30,7 @@ Zoch_bot/
     __init__.py
     auth.py                 # JWT-утилиты, хеширование паролей
     database.py             # SQLAlchemy engine, SessionLocal
-    models.py               # Модели User, Reminder, WeightRecord
+    models.py               # Модели User, Reminder, WeightRecord, PasswordResetToken
     calorie_calculator.py   # Формула Миффлина-Сан Жеора
     rag_system.py           # RAG: LangChain + Ollama
     rag_data_manager.py     # ChromaDB: векторный поиск
@@ -42,6 +42,7 @@ Zoch_bot/
       definitions.py        # /api/definitions/* — OSTIS определения
       rag.py                # /api/rag/* — AI-ассистент, база знаний
       weight.py             # /api/weight/* — история веса
+    email_service.py        # Отправка писем через Gmail SMTP
 
   frontend/
     src/
@@ -171,10 +172,14 @@ API документация (Swagger): `http://localhost:8000/docs`.
 |-------|------|----------|
 | POST | `/api/auth/register` | Регистрация (email + пароль + параметры) |
 | POST | `/api/auth/login` | Вход по email + пароль |
+| POST | `/api/auth/logout` | Выход — удаляет httpOnly cookie |
 | POST | `/api/auth/google` | Вход/регистрация через Google OAuth2 |
 | GET | `/api/auth/me` | Получить данные текущего пользователя |
 | PUT | `/api/auth/me` | Обновить профиль |
+| PUT | `/api/auth/password` | Смена пароля (требуется текущий) |
 | DELETE | `/api/auth/me` | Удалить аккаунт и все данные |
+| POST | `/api/auth/forgot-password` | Запросить письмо для восстановления пароля |
+| POST | `/api/auth/reset-password` | Установить новый пароль по токену из письма |
 
 ### Калькулятор КБЖУ (`/api/calories`)
 
@@ -243,7 +248,10 @@ RAG-система: вопрос → поиск по ChromaDB (top-3) → фор
 | `/` | LandingPage | Приветственная страница |
 | `/login` | LoginPage | Вход (email + Google OAuth) |
 | `/register` | RegisterPage | Регистрация (шаг 1) |
-| `/register-params` | RegisterParamsPage | Параметры тела (шаг 2) |
+| `/register-params` | RegisterParamsPage | Параметры тела (шаг 2, также для Google-входа) |
+| `/forgot-password` | ForgotPasswordPage | Запрос письма восстановления пароля |
+| `/reset-password?token=...` | ResetPasswordPage | Установка нового пароля по ссылке из email |
+| `/privacy` | PrivacyPage | Политика конфиденциальности |
 | `/dashboard` | DashboardPage | Главный дашборд |
 | `/dashboard/nutrition` | NutritionPage | Питание + калькулятор КБЖУ |
 | `/dashboard/ai-assistant` | ChatPage | AI-чат (RAG) |
@@ -269,7 +277,10 @@ RAG-система: вопрос → поиск по ChromaDB (top-3) → фор
 Подключение к sc-server через WebSocket. Создание семантических узлов, добавление определений через ролевые отношения (`nrel_definition`). Опциональная зависимость — приложение работает без OSTIS.
 
 ### История веса (`app/routers/weight.py` + `app/models.py`)
-Модель `WeightRecord` (user_id, weight, date) хранит измерения веса в PostgreSQL. При добавлении записи обновляется текущий вес в профиле пользователя. На фронтенде — столбчатый график динамики веса во вкладке «Статистика».
+Модель `WeightRecord` (user_id, weight, date) хранит измерения веса в PostgreSQL. При добавлении записи обновляется текущий вес в профиле пользователя. На фронтенде — линейный график динамики веса во вкладке «Статистика».
+
+### Восстановление пароля (`app/email_service.py` + `app/routers/auth.py`)
+Gmail SMTP отправляет письмо со ссылкой сброса пароля. Модель `PasswordResetToken` хранит одноразовые токены со сроком действия 1 час. При запросе генерируется токен `secrets.token_urlsafe(32)`, сохраняется в БД и отправляется пользователю в HTML-письме. По ссылке `/reset-password?token=...` пользователь вводит новый пароль.
 
 ### Аутентификация (`app/auth.py` + `app/routers/auth.py`)
 JWT-токены (python-jose), хеширование паролей (bcrypt), Google OAuth2 (google-auth). Модели User, Reminder и WeightRecord хранятся в PostgreSQL через SQLAlchemy.
@@ -281,6 +292,9 @@ JWT-токены (python-jose), хеширование паролей (bcrypt), 
 | `DATABASE_URL` | URL подключения к PostgreSQL | `postgresql://postgres:pass@localhost:5432/healthgo` |
 | `JWT_SECRET` | Секретный ключ для JWT-токенов | `my-super-secret-key` |
 | `GOOGLE_CLIENT_ID` | Client ID из Google Cloud Console | `123456.apps.googleusercontent.com` |
+| `SMTP_EMAIL` | Gmail для отправки писем восстановления пароля | `healthgo.noreply@gmail.com` |
+| `SMTP_PASSWORD` | App Password Gmail (16 символов, не обычный пароль) | `abcdefghijklmnop` |
+| `FRONTEND_URL` | Адрес фронтенда для формирования ссылок в письмах | `http://localhost:8000` |
 
 ## Опциональные зависимости
 
