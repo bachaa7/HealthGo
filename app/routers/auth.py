@@ -1,13 +1,15 @@
 """Роутер аутентификации: регистрация, логин, Google OAuth2, профиль."""
 
 import os
+import secrets
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field, EmailStr
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database import get_db
-from app.models import User
+from app.models import User, PasswordResetToken
 from app.auth import (
     hash_password,
     verify_password,
@@ -16,6 +18,7 @@ from app.auth import (
     ACCESS_TOKEN_EXPIRE_DAYS,
     COOKIE_NAME,
 )
+from app.email_service import send_password_reset_email
 
 router = APIRouter(prefix="/api/auth", tags=["Аутентификация"])
 
@@ -238,3 +241,75 @@ async def update_me(
     db.commit()
     db.refresh(current_user)
     return _user_to_dict(current_user)
+
+
+# ─────────────── Восстановление пароля ───────────────
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=6, max_length=128)
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Запрос на восстановление пароля.
+
+    Всегда возвращает 200, даже если email не найден — чтобы нельзя было
+    проверять существование аккаунтов перебором.
+    """
+    user = db.query(User).filter(User.email == data.email).first()
+
+    if user and user.password_hash:
+        # Создаём токен (действителен 1 час)
+        token = secrets.token_urlsafe(32)
+        expires = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+
+        # Удаляем старые неиспользованные токены этого пользователя
+        db.query(PasswordResetToken).filter(
+            PasswordResetToken.user_id == user.id,
+            PasswordResetToken.used == False,
+        ).delete()
+
+        reset_record = PasswordResetToken(
+            user_id=user.id,
+            token=token,
+            expires_at=expires,
+        )
+        db.add(reset_record)
+        db.commit()
+
+        # Отправляем email (в отдельном потоке было бы правильнее,
+        # но для простоты — синхронно)
+        send_password_reset_email(user.email, user.name, token)
+
+    return {"detail": "Если email зарегистрирован, на него отправлено письмо с инструкцией"}
+
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Сброс пароля по токену из email."""
+    reset_record = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token,
+        PasswordResetToken.used == False,
+    ).first()
+
+    if not reset_record:
+        raise HTTPException(status_code=400, detail="Недействительная или уже использованная ссылка")
+
+    if reset_record.expires_at < datetime.datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Срок действия ссылки истёк. Запросите новую")
+
+    user = db.query(User).filter(User.id == reset_record.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Пользователь не найден")
+
+    # Меняем пароль и помечаем токен использованным
+    user.password_hash = hash_password(data.new_password)
+    reset_record.used = True
+    db.commit()
+
+    return {"detail": "Пароль успешно изменён. Теперь вы можете войти с новым паролем"}

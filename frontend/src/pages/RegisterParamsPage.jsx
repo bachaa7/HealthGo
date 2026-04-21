@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { apiPost } from '../utils/api'
+import { apiPost, apiPut } from '../utils/api'
 import Button from '../components/Button'
 import './RegisterParams.css'
 
 export default function RegisterParamsPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { user, login, updateUser } = useAuth()
   const [formData, setFormData] = useState({
     gender: '',
     birthDay: '',
@@ -28,19 +28,38 @@ export default function RegisterParamsPage() {
     setLoading(true)
     setError('')
 
-    // Получаем данные с предыдущего шага
+    // Формируем дату рождения
+    let birth_date = null
+    if (formData.birthYear && formData.birthMonth && formData.birthDay) {
+      birth_date = `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
+    }
+
+    // Если пользователь уже авторизован (через Google) — просто обновляем профиль
+    if (user) {
+      try {
+        const updated = await apiPut('/api/auth/me', {
+          gender: formData.gender || null,
+          height: formData.height ? Number(formData.height) : null,
+          weight: formData.weight ? Number(formData.weight) : null,
+          birth_date,
+        })
+        updateUser(updated)
+        navigate('/dashboard')
+      } catch (err) {
+        setError('Ошибка сохранения параметров')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // Обычная регистрация — получаем данные с предыдущего шага
     const saved = sessionStorage.getItem('registerData')
     if (!saved) {
       navigate('/register')
       return
     }
     const { name, email, password } = JSON.parse(saved)
-
-    // Формируем дату рождения
-    let birth_date = null
-    if (formData.birthYear && formData.birthMonth && formData.birthDay) {
-      birth_date = `${formData.birthYear}-${formData.birthMonth.padStart(2, '0')}-${formData.birthDay.padStart(2, '0')}`
-    }
 
     try {
       const data = await apiPost('/api/auth/register', {
