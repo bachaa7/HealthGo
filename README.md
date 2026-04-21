@@ -100,13 +100,29 @@ CREATE DATABASE healthgo;
 
 ### 4. Настроить переменные окружения
 
-Отредактируйте `.env`:
+Скопируйте шаблон `.env.example` в `.env`:
+
+```bash
+# Windows (PowerShell)
+Copy-Item .env.example .env
+
+# Linux / macOS
+cp .env.example .env
+```
+
+Затем откройте `.env` и заполните реальными значениями:
 
 ```env
 DATABASE_URL=postgresql://postgres:ваш_пароль@localhost:5432/healthgo
 JWT_SECRET=ваш-секретный-ключ-для-jwt
 GOOGLE_CLIENT_ID=ваш-google-client-id
+SMTP_EMAIL=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FRONTEND_URL=http://localhost:8000
 ```
+
+**Важно:** файл `.env` не попадает в git (указан в `.gitignore`) — он содержит секреты.
+Участники команды получают значения `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `SMTP_EMAIL`, `SMTP_PASSWORD` от владельца проекта напрямую. `DATABASE_URL` каждый настраивает под свою локальную БД.
 
 ### 5. Собрать фронтенд
 
