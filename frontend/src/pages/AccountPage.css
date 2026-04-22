@@ -494,3 +494,127 @@
     max-width: 100%;
   }
 }
+
+/* ===== Achievements Tab ===== */
+.achievements-section {
+  padding: 8px 0;
+}
+
+.achievements-header {
+  background: linear-gradient(135deg, #FFF8E1, #FFE082);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 8px;
+  border: 1px solid #FFD54F;
+}
+
+.achievements-counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.achievements-counter-num {
+  font-size: 56px;
+  font-weight: 800;
+  color: #F57C00;
+  line-height: 1;
+}
+
+.achievements-counter-total {
+  font-size: 28px;
+  font-weight: 600;
+  color: #8D6E63;
+}
+
+.achievements-counter-label {
+  font-size: 15px;
+  color: #5D4037;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.achievements-progress-bar {
+  max-width: 420px;
+  height: 10px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.achievements-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFB300, #F57C00);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.achievements-category {
+  margin-top: 8px;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.achievement-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.achievement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.achievement-card--earned {
+  background: linear-gradient(135deg, #E8F5E9, white);
+  border-color: #A5D6A7;
+}
+
+.achievement-card--locked {
+  opacity: 0.55;
+}
+
+.achievement-card-icon {
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 10px;
+  filter: grayscale(0);
+}
+
+.achievement-card--locked .achievement-card-icon {
+  filter: grayscale(1);
+}
+
+.achievement-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+
+.achievement-card-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.4;
+  min-height: 32px;
+}
+
+.achievement-card-date {
+  font-size: 11px;
+  color: #4CAF50;
+  font-weight: 600;
+  margin-top: 8px;
+}

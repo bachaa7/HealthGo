@@ -17,6 +17,7 @@ import DefinitionsPage from './pages/DefinitionsPage'
 import KnowledgePage from './pages/KnowledgePage'
 import PrivacyPage from './pages/PrivacyPage'
 import CookieBanner from './components/CookieBanner'
+import AchievementToast from './components/AchievementToast'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
@@ -61,6 +62,7 @@ function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     <CookieBanner />
+    <AchievementToast />
     </>
   )
 }
