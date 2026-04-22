@@ -1,5 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import User
+from app.auth import get_current_user
+from app.achievements import check_on_ai_question, check_on_knowledge_added
 
 router = APIRouter(prefix="/api/rag", tags=["RAG (ИИ-ассистент)"])
 
@@ -37,12 +43,19 @@ class KnowledgeItem(BaseModel):
 
 
 @router.post("/ask", response_model=AskQuestionResponse)
-async def ask_question(data: AskQuestionRequest):
+async def ask_question(
+    data: AskQuestionRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Задать вопрос ИИ-ассистенту (RAG)."""
     try:
         from app.rag_system import rag_system
 
         answer, sources = await rag_system.ask_question(data.question)
+
+        # Проверяем достижения
+        check_on_ai_question(db, current_user)
 
         return AskQuestionResponse(
             question=data.question,
@@ -54,7 +67,11 @@ async def ask_question(data: AskQuestionRequest):
 
 
 @router.post("/knowledge/create")
-async def create_knowledge(data: CreateKnowledgeRequest):
+async def create_knowledge(
+    data: CreateKnowledgeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Создать новое знание (сохраняется в OSTIS + векторную БД)."""
     try:
         from ostis_manager import create_node_in_ostis, extract_data_from_ostis
@@ -84,6 +101,9 @@ async def create_knowledge(data: CreateKnowledgeRequest):
                 content=extracted_data["content"],
                 category=data.category,
             )
+
+        # Проверяем достижения
+        check_on_knowledge_added(db, current_user)
 
         return {
             "success": True,

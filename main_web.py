@@ -19,6 +19,7 @@ from app.routers.recommendations import router as recommendations_router
 from app.routers.definitions import router as definitions_router
 from app.routers.rag import router as rag_router
 from app.routers.weight import router as weight_router
+from app.routers.achievements import router as achievements_router
 
 FRONTEND_DIR = Path(__file__).parent / "frontend" / "dist"
 
@@ -68,6 +69,7 @@ app.include_router(recommendations_router)
 app.include_router(definitions_router)
 app.include_router(rag_router)
 app.include_router(weight_router)
+app.include_router(achievements_router)
 
 
 # --- Раздача фронтенда ---

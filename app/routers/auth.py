@@ -19,6 +19,7 @@ from app.auth import (
     COOKIE_NAME,
 )
 from app.email_service import send_password_reset_email
+from app.achievements import check_on_login
 
 router = APIRouter(prefix="/api/auth", tags=["Аутентификация"])
 
@@ -111,6 +112,7 @@ async def register(data: RegisterRequest, response: Response, db: Session = Depe
 
     token = create_jwt(user.id, user.email, user.name)
     _set_token_cookie(response, token)
+    check_on_login(db, user)
     return {"user": _user_to_dict(user)}
 
 
@@ -125,6 +127,7 @@ async def login(data: LoginRequest, response: Response, db: Session = Depends(ge
 
     token = create_jwt(user.id, user.email, user.name)
     _set_token_cookie(response, token)
+    check_on_login(db, user)
     return {"user": _user_to_dict(user)}
 
 
@@ -173,6 +176,7 @@ async def google_auth(data: GoogleAuthRequest, response: Response, db: Session =
 
     token = create_jwt(user.id, user.email, user.name)
     _set_token_cookie(response, token)
+    check_on_login(db, user)
     return {"user": _user_to_dict(user)}
 
 
@@ -240,6 +244,8 @@ async def update_me(
             setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
+    # Проверка ачивок профиля
+    check_on_login(db, current_user)
     return _user_to_dict(current_user)
 
 
