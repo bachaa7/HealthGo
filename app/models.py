@@ -23,6 +23,7 @@ class User(Base):
 
     reminders = relationship("Reminder", back_populates="user", cascade="all, delete-orphan")
     weight_records = relationship("WeightRecord", back_populates="user", cascade="all, delete-orphan")
+    achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
 
 
 class Reminder(Base):
@@ -59,3 +60,14 @@ class WeightRecord(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="weight_records")
+
+
+class UserAchievement(Base):
+    __tablename__ = "user_achievements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    code = Column(String, nullable=False)  # код ачивки из справочника
+    earned_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship("User", back_populates="achievements")

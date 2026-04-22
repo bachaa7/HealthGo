@@ -1,0 +1,74 @@
+.achievement-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 380px;
+  cursor: pointer;
+  border-left: 4px solid #4CAF50;
+  animation: slideInRight 0.4s ease-out, goldPulse 2s ease-in-out infinite;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(420px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4); }
+}
+
+.achievement-toast-icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.achievement-toast-content {
+  flex: 1;
+}
+
+.achievement-toast-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FF9800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.achievement-toast-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.achievement-toast-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+  .achievement-toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+  }
+}

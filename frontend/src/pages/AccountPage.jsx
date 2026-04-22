@@ -33,10 +33,14 @@ export default function AccountPage() {
   const [weightHistory, setWeightHistory] = useState([])
   const [newWeight, setNewWeight] = useState('')
   const [weightLoading, setWeightLoading] = useState(false)
+  const [achievements, setAchievements] = useState([])
 
   useEffect(() => {
     apiGet('/api/weight/')
       .then(data => { if (Array.isArray(data)) setWeightHistory(data) })
+      .catch(() => {})
+    apiGet('/api/achievements/')
+      .then(data => { if (data?.achievements) setAchievements(data.achievements) })
       .catch(() => {})
   }, [])
 
@@ -93,6 +97,7 @@ export default function AccountPage() {
   const tabs = [
     { id: 'profile', label: 'Профиль' },
     { id: 'stats', label: 'Статистика' },
+    { id: 'achievements', label: 'Достижения' },
     { id: 'settings', label: 'Настройки' },
     { id: 'security', label: 'Безопасность' },
   ]
@@ -481,6 +486,65 @@ export default function AccountPage() {
                 ) : (
                   <p style={{ color: '#999' }}>Нет записей. Введите вес выше чтобы начать отслеживание</p>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'achievements' && (
+              <div className="achievements-section">
+                {(() => {
+                  const earned = achievements.filter(a => a.earned)
+                  const categories = [
+                    { id: 'start', label: 'Первые шаги' },
+                    { id: 'progress', label: 'Прогресс' },
+                    { id: 'health', label: 'Здоровье' },
+                    { id: 'fun', label: 'Разное' },
+                  ]
+                  return (
+                    <>
+                      <div className="achievements-header">
+                        <div className="achievements-counter">
+                          <span className="achievements-counter-num">{earned.length}</span>
+                          <span className="achievements-counter-total">/ {achievements.length}</span>
+                        </div>
+                        <div className="achievements-counter-label">достижений получено</div>
+                        <div className="achievements-progress-bar">
+                          <div
+                            className="achievements-progress-fill"
+                            style={{ width: `${achievements.length ? (earned.length / achievements.length * 100) : 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {categories.map(cat => {
+                        const catAchievements = achievements.filter(a => a.category === cat.id)
+                        if (catAchievements.length === 0) return null
+                        return (
+                          <div key={cat.id} className="achievements-category">
+                            <h3 className="section-title section-title--margin">{cat.label}</h3>
+                            <div className="achievements-grid">
+                              {catAchievements.map(a => (
+                                <div
+                                  key={a.code}
+                                  className={`achievement-card ${a.earned ? 'achievement-card--earned' : 'achievement-card--locked'}`}
+                                  title={a.earned && a.earned_at ? `Получено: ${new Date(a.earned_at).toLocaleDateString('ru-RU')}` : 'Не получено'}
+                                >
+                                  <div className="achievement-card-icon">{a.earned ? a.icon : '🔒'}</div>
+                                  <div className="achievement-card-name">{a.name}</div>
+                                  <div className="achievement-card-desc">{a.description}</div>
+                                  {a.earned && a.earned_at && (
+                                    <div className="achievement-card-date">
+                                      {new Date(a.earned_at).toLocaleDateString('ru-RU')}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </>
+                  )
+                })()}
               </div>
             )}
 

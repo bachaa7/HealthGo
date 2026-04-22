@@ -9,6 +9,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const [reminders, setReminders] = useState([])
   const [recommendations, setRecommendations] = useState(null)
+  const [achStats, setAchStats] = useState({ earned: 0, total: 0, recent: null })
 
   useEffect(() => {
     apiGet('/api/reminders/').then(data => {
@@ -18,6 +19,17 @@ export default function DashboardPage() {
     apiGet('/api/recommendations/habits').then(data => {
       if (data.habits) setRecommendations(data.habits.slice(0, 3))
     }).catch((err) => console.error('Не удалось загрузить рекомендации:', err.message))
+
+    apiGet('/api/achievements/').then(data => {
+      if (data?.achievements) {
+        const earned = data.achievements.filter(a => a.earned)
+        setAchStats({
+          earned: earned.length,
+          total: data.total || data.achievements.length,
+          recent: earned[earned.length - 1] || null,
+        })
+      }
+    }).catch(() => {})
   }, [])
 
   const getGreeting = () => {
@@ -114,6 +126,33 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Достижения */}
+        {achStats.total > 0 && (
+          <Link to="/dashboard/account" state={{ tab: 'achievements' }} className="dashboard-ach-banner">
+            <div className="dashboard-ach-icon">
+              {achStats.recent?.icon || '🏆'}
+            </div>
+            <div className="dashboard-ach-info">
+              <div className="dashboard-ach-title">Достижения</div>
+              <div className="dashboard-ach-subtitle">
+                {achStats.recent
+                  ? `Последнее: ${achStats.recent.name}`
+                  : 'Выполняйте действия, чтобы получать медали'}
+              </div>
+              <div className="dashboard-ach-progress-bar">
+                <div
+                  className="dashboard-ach-progress-fill"
+                  style={{ width: `${(achStats.earned / achStats.total) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="dashboard-ach-counter">
+              <span className="dashboard-ach-counter-num">{achStats.earned}</span>
+              <span className="dashboard-ach-counter-total">/ {achStats.total}</span>
+            </div>
+          </Link>
         )}
 
         {/* Main Content Grid */}

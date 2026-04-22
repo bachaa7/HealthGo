@@ -384,3 +384,88 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Achievements banner on dashboard */
+.dashboard-ach-banner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  border: 1px solid #FFD54F;
+  border-radius: 14px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-ach-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.2);
+}
+
+.dashboard-ach-icon {
+  font-size: 40px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dashboard-ach-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-ach-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #5D4037;
+  margin-bottom: 2px;
+}
+
+.dashboard-ach-subtitle {
+  font-size: 13px;
+  color: #795548;
+  margin-bottom: 8px;
+}
+
+.dashboard-ach-progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 6px;
+  overflow: hidden;
+  max-width: 360px;
+}
+
+.dashboard-ach-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFB300, #F57C00);
+}
+
+.dashboard-ach-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.dashboard-ach-counter-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: #F57C00;
+  line-height: 1;
+}
+
+.dashboard-ach-counter-total {
+  font-size: 18px;
+  color: #8D6E63;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .dashboard-ach-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}

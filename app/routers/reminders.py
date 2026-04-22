@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Reminder, User
 from app.auth import get_current_user
+from app.achievements import check_on_reminder_changed
 
 router = APIRouter(prefix="/api/reminders", tags=["Напоминания"])
 
@@ -66,6 +67,7 @@ async def create_reminder(
     db.add(reminder)
     db.commit()
     db.refresh(reminder)
+    check_on_reminder_changed(db, current_user)
     return reminder
 
 
@@ -90,6 +92,7 @@ async def update_reminder(
 
     db.commit()
     db.refresh(reminder)
+    check_on_reminder_changed(db, current_user)
     return reminder
 
 

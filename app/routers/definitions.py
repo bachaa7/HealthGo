@@ -1,5 +1,11 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import User
+from app.auth import get_current_user
+from app.achievements import check_on_definition_viewed
 
 router = APIRouter(prefix="/api/definitions", tags=["Определения (OSTIS)"])
 
@@ -36,9 +42,14 @@ async def get_predefined_concepts():
 
 
 @router.get("/lookup/{concept_id}", response_model=DefinitionResponse)
-async def lookup_definition(concept_id: str):
+async def lookup_definition(
+    concept_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Найти определение понятия в OSTIS."""
     try:
+        check_on_definition_viewed(db, current_user)
         from sc_client.client import is_connected, connect
         from sc_client.constants import sc_types
         from sc_kpm import ScKeynodes

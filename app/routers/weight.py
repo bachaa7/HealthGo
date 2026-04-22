@@ -8,6 +8,7 @@ from typing import Optional
 from app.database import get_db
 from app.models import User, WeightRecord
 from app.auth import get_current_user
+from app.achievements import check_on_weight_added
 
 router = APIRouter(prefix="/api/weight", tags=["История веса"])
 
@@ -52,6 +53,9 @@ async def add_weight(
     current_user.weight = data.weight
     db.commit()
     db.refresh(existing)
+
+    # Проверяем достижения
+    check_on_weight_added(db, current_user)
 
     return existing
 
