@@ -362,7 +362,7 @@ export default function NutritionPage() {
               <div className="meal-empty">
                 <p>Нет продуктов в этой категории</p>
                 <Button variant="secondary" size="small" onClick={() => setShowAddModal(true)}>
-                  Добавить первый продукт
+                  Добавить продукт
                 </Button>
               </div>
             ) : (
