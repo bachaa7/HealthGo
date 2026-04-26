@@ -45,6 +45,15 @@
   background-color: #FFE082;
 }
 
+.input-card--green,
+.input-card--orange,
+.input-card--green .input-card-label,
+.input-card--orange .input-card-label,
+.input-card--green .slider-value,
+.input-card--orange .slider-value {
+  color: #000000;
+}
+
 .input-card-label {
   font-size: 20px;
   font-weight: 500;
@@ -119,6 +128,7 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--white);
+  border: 2px solid white;
 }
 
 .bmi-value {
@@ -152,6 +162,7 @@
     #F44336 84%, 
     #F44336 100%
   );
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .bmi-scale-marker {
@@ -575,9 +586,29 @@
 }
 
 .form-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1 1 100px;
+  min-width: 80px;
+}
+
+.form-group .form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+  }
 }
 
 .modal-actions {
@@ -598,20 +629,6 @@
   .calorie-main {
     flex-direction: row;
     justify-content: center;
-  }
-}
-
-@media (max-width: 600px) {
-  .dashboard-content {
-    padding: 20px;
-  }
-
-  .calorie-main {
-    flex-direction: column;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
   }
 }
 

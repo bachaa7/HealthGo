@@ -5,6 +5,8 @@ __pycache__/
 *.pyo
 *.egg-info/
 
+.vscode/
+
 # Environment
 .env
 
@@ -24,4 +26,5 @@ Thumbs.db
 
 # Legacy
 py-sc-client/
-get_function
+get_function  
+ 
