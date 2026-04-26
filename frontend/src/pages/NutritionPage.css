@@ -45,6 +45,15 @@
   background-color: #FFE082;
 }
 
+.input-card--green,
+.input-card--orange,
+.input-card--green .input-card-label,
+.input-card--orange .input-card-label,
+.input-card--green .slider-value,
+.input-card--orange .slider-value {
+  color: #000000;
+}
+
 .input-card-label {
   font-size: 20px;
   font-weight: 500;
