@@ -591,6 +591,26 @@
   gap: 12px;
 }
 
+.form-row .form-group {
+  flex: 1 1 100px;
+  min-width: 80px;
+}
+
+.form-group .form-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+  }
+}
+
 .modal-actions {
   display: flex;
   gap: 12px;
@@ -609,20 +629,6 @@
   .calorie-main {
     flex-direction: row;
     justify-content: center;
-  }
-}
-
-@media (max-width: 600px) {
-  .dashboard-content {
-    padding: 20px;
-  }
-
-  .calorie-main {
-    flex-direction: column;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
   }
 }
 
