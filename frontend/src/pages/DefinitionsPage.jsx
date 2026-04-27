@@ -106,7 +106,7 @@ export default function DefinitionsPage() {
                   <textarea className="form-input def-textarea" value={addForm.definition} onChange={e => setAddForm({ ...addForm, definition: e.target.value })} placeholder="Текст определения..." rows={4} />
                 </div>
                 {addStatus === 'success' && <p className="def-add-success">Определение добавлено!</p>}
-                {addStatus === 'error' && <p className="def-add-error">Ошибка. OSTIS недоступен?</p>}
+                {addStatus === 'error' && <p className="def-add-error">Ошибка. OSTIS недоступен</p>}
               </div>
               <div className="modal-actions">
                 <Button variant="secondary" onClick={() => setShowAddModal(false)}>Отмена</Button>
