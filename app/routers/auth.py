@@ -50,12 +50,14 @@ class GoogleAuthRequest(BaseModel):
 
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
+    email: Optional[str] = Field(None, min_length=1, max_length=100)
+    phone: Optional[str] = Field(None, max_length=20)
+    photo: Optional[str] = Field(None, max_length=500)  # ПУТЬ К ФОТО
     gender: Optional[str] = Field(None, pattern="^(male|female)$")
     height: Optional[float] = Field(None, ge=50, le=250)
     weight: Optional[float] = Field(None, ge=20, le=300)
     birth_date: Optional[str] = Field(None, pattern=r"^\d{4}-\d{2}-\d{2}$")
     activity_level: Optional[str] = Field(None, pattern="^(sedentary|light|moderate|active|very-active)$")
-    phone: Optional[str] = Field(None, max_length=20)
 
 
 # ─────────────── Вспомогательные функции ───────────────
@@ -78,6 +80,8 @@ def _user_to_dict(user: User) -> dict:
         "id": user.id,
         "email": user.email,
         "name": user.name,
+        "phone": user.phone,
+        "photo": user.photo,
         "gender": user.gender,
         "height": user.height,
         "weight": user.weight,
@@ -238,13 +242,16 @@ async def update_me(
     db: Session = Depends(get_db),
 ):
     """Обновить профиль текущего пользователя."""
-    UPDATABLE_FIELDS = {"name", "gender", "height", "weight", "birth_date", "activity_level", "phone"}
-    for field, value in data.model_dump(exclude_unset=True).items():
-        if field in UPDATABLE_FIELDS and value is not None:
+    UPDATABLE_FIELDS = {"email", "name", "phone", "photo", "gender", "height", "weight", "birth_date", "activity_level"}
+    
+    raw_data = data.model_dump()
+    
+    for field, value in raw_data.items():
+        if field in UPDATABLE_FIELDS and value is not None and value != '':
             setattr(current_user, field, value)
+    
     db.commit()
     db.refresh(current_user)
-    # Проверка ачивок профиля
     check_on_login(db, current_user)
     return _user_to_dict(current_user)
 

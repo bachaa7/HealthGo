@@ -89,3 +89,68 @@ HealthGo
     except Exception as e:
         print(f"✗ Ошибка отправки email: {e}")
         return False
+
+
+def send_reminder_email(to_email: str, name: str, reminder_title: str, reminder_time: str) -> bool:
+    """Отправить email-напоминание."""
+    if not SMTP_EMAIL or not SMTP_PASSWORD:
+        return False
+
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #4CAF50; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0;">🔔 HealthGo</h1>
+        </div>
+        <div style="background: #f8f5f3; padding: 30px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #333;">Напоминание</h2>
+            <p>Здравствуйте, <strong>{name}</strong>!</p>
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+                <p style="font-size: 18px; margin: 0; color: #333;">
+                    <strong>{reminder_title}</strong>
+                </p>
+                <p style="font-size: 24px; color: #4CAF50; margin: 10px 0 0 0;">
+                    ⏰ {reminder_time}
+                </p>
+            </div>
+            <p>Не забудьте выполнить это напоминание!</p>
+            <p style="color: #999; font-size: 13px; margin-top: 30px;">
+                Это автоматическое напоминание от приложения HealthGo.
+            </p>
+        </div>
+        <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+            © HealthGo — Ваш ассистент здорового образа жизни
+        </p>
+    </body>
+    </html>
+    """
+
+    text_body = f"""
+    Здравствуйте, {name}!
+    
+    Напоминание: {reminder_title}
+    Время: {reminder_time}
+    
+    Не забудьте выполнить это напоминание!
+    
+    HealthGo
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"🔔 Напоминание: {reminder_title}"
+    msg["From"] = f"HealthGo <{SMTP_EMAIL}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(text_body, "plain", "utf-8"))
+    msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.send_message(msg)
+        print(f"✓ Напоминание отправлено на {to_email}: {reminder_title}")
+        return True
+    except Exception as e:
+        print(f"✗ Ошибка отправки напоминания: {e}")
+        return False

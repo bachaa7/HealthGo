@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import Button from '../components/Button'
 import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
+import { 
+  requestNotificationPermission, 
+  registerServiceWorker, 
+  checkNotificationStatus,
+  showLocalNotification 
+} from '../utils/notifications'
 import './RemindersPage.css'
 
 const daysOfWeek = [
@@ -23,11 +30,29 @@ const defaultReminders = [
 ]
 
 export default function RemindersPage() {
+  const { user } = useAuth()
   const [reminders, setReminders] = useState(defaultReminders)
   const [showModal, setShowModal] = useState(false)
   const [editingReminder, setEditingReminder] = useState(null)
   const [formData, setFormData] = useState({ title: '', time: '09:00', days: [] })
   const [useApi, setUseApi] = useState(false)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [swRegistered, setSwRegistered] = useState(false)
+
+  // Инициализация уведомлений
+  useEffect(() => {
+    const initNotifications = async () => {
+      const status = checkNotificationStatus()
+      if (!status.supported) return
+      
+      await registerServiceWorker()
+      setSwRegistered(true)
+      
+      const granted = await requestNotificationPermission()
+      setNotificationsEnabled(granted)
+    }
+    initNotifications()
+  }, [])
 
   // Пробуем загрузить с сервера
   useEffect(() => {
@@ -82,7 +107,11 @@ export default function RemindersPage() {
   const handleOpenModal = (reminder = null) => {
     if (reminder) {
       setEditingReminder(reminder)
-      setFormData({ title: reminder.title, time: reminder.time, days: reminder.days })
+      setFormData({ 
+        title: reminder.title, 
+        time: reminder.time, 
+        days: reminder.days
+      })
     } else {
       setEditingReminder(null)
       setFormData({ title: '', time: '09:00', days: [] })
@@ -98,25 +127,25 @@ export default function RemindersPage() {
       if (useApi) {
         try {
           const updated = await apiPut(`/api/reminders/${editingReminder.id}`, {
-            title: formData.title, time: formData.time, days,
+            title: formData.title, time: formData.time, days, notify_email: true,
           })
           setReminders(reminders.map(r => r.id === editingReminder.id ? updated : r))
         } catch {
-          setReminders(reminders.map(r => r.id === editingReminder.id ? { ...r, title: formData.title, time: formData.time, days } : r))
+          setReminders(reminders.map(r => r.id === editingReminder.id ? { ...r, title: formData.title, time: formData.time, days, notify_email: true } : r))
         }
       } else {
-        setReminders(reminders.map(r => r.id === editingReminder.id ? { ...r, title: formData.title, time: formData.time, days } : r))
+        setReminders(reminders.map(r => r.id === editingReminder.id ? { ...r, title: formData.title, time: formData.time, days, notify_email: true } : r))
       }
     } else {
       if (useApi) {
         try {
-          const created = await apiPost('/api/reminders/', { title: formData.title, time: formData.time, days, enabled: true })
+          const created = await apiPost('/api/reminders/', { title: formData.title, time: formData.time, days, enabled: true, notify_email: true })
           setReminders([...reminders, created])
         } catch {
-          setReminders([...reminders, { id: Date.now(), title: formData.title, time: formData.time, days, enabled: true }])
+          setReminders([...reminders, { id: Date.now(), title: formData.title, time: formData.time, days, enabled: true, notify_email: true }])
         }
       } else {
-        setReminders([...reminders, { id: Date.now(), title: formData.title, time: formData.time, days, enabled: true }])
+        setReminders([...reminders, { id: Date.now(), title: formData.title, time: formData.time, days, enabled: true, notify_email: true }])
       }
     }
     setShowModal(false)
@@ -143,13 +172,67 @@ export default function RemindersPage() {
 
   const todayReminders = getTodayReminder()
 
+  // Проверка напоминаний каждую минуту
+  useEffect(() => {
+    if (!notificationsEnabled || !swRegistered) return
+    
+    const checkReminders = () => {
+      const now = new Date()
+      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+      const dayMap = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+      const currentDay = dayMap[now.getDay()]
+      
+      reminders.forEach(reminder => {
+        if (reminder.enabled && reminder.time === currentTime && reminder.days.includes(currentDay)) {
+          showLocalNotification(reminder.title, {
+            body: `Напоминание на ${reminder.time}`,
+            tag: `reminder-${reminder.id}`,
+            renotify: true
+          })
+        }
+      })
+    }
+    
+    const interval = setInterval(checkReminders, 60000)
+    checkReminders()
+    
+    return () => clearInterval(interval)
+  }, [reminders, notificationsEnabled, swRegistered])
+
+  const testNotification = async () => {
+    console.log('=== ТЕСТ УВЕДОМЛЕНИЯ ===');
+    console.log('notificationsEnabled:', notificationsEnabled);
+    console.log('Notification.permission:', Notification.permission);
+    
+    if (!notificationsEnabled) {
+      const granted = await requestNotificationPermission()
+      setNotificationsEnabled(granted)
+      console.log('Разрешение получено:', granted)
+      if (!granted) {
+        alert('Для уведомлений нужно разрешение в браузере')
+        return
+      }
+      alert('Уведомления включены! Теперь нажмите ещё раз для теста.')
+      return
+    }
+    
+    console.log('Отправляю уведомление...')
+    await showLocalNotification('Тестовое уведомление', {
+      body: 'Напоминания работают!',
+      tag: 'test'
+    })
+    console.log('Уведомление отправлено')
+  }
+
   return (
     <div className="dashboard-container">
       <Sidebar />
       <main className="dashboard-content">
         <div className="reminders-header">
           <h1 className="page-title">Напоминания</h1>
-          <Button variant="primary" size="medium" onClick={() => handleOpenModal()}>+ Добавить</Button>
+          <div className="header-actions">
+            <Button variant="primary" size="medium" onClick={() => handleOpenModal()}>+ Добавить</Button>
+          </div>
         </div>
 
         {todayReminders.length > 0 && (
@@ -233,6 +316,7 @@ export default function RemindersPage() {
                       </button>
                     ))}
                   </div>
+                  <p className="form-hint">Напоминание придёт на email: {user?.email}</p>
                 </div>
               </div>
               <div className="modal-actions">

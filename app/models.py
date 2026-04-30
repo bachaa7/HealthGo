@@ -12,6 +12,8 @@ class User(Base):
     name = Column(String, nullable=False)
     password_hash = Column(String, nullable=True)  # None для Google OAuth
     google_id = Column(String, unique=True, nullable=True)
+    phone = Column(String, nullable=True)
+    photo = Column(String, nullable=True)  # ПУТЬ К ФОТО
 
     gender = Column(String, nullable=True)  # "male" / "female"
     height = Column(Float, nullable=True)   # см
@@ -35,6 +37,8 @@ class Reminder(Base):
     time = Column(String, nullable=False)       # "HH:MM"
     days = Column(JSON, default=list)            # ["mon","tue",...]
     enabled = Column(Boolean, default=True)
+    notify_email = Column(Boolean, default=False)  # отправлять на email
+    last_sent = Column(DateTime, nullable=True)  # последняя отправка
 
     user = relationship("User", back_populates="reminders")
 

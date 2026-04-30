@@ -1,9 +1,9 @@
 import sys
 import os
+import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-# Добавляем корневую директорию в path для импортов (ostis_manager, add_defiition)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, Request
@@ -20,17 +20,20 @@ from app.routers.definitions import router as definitions_router
 from app.routers.rag import router as rag_router
 from app.routers.weight import router as weight_router
 from app.routers.achievements import router as achievements_router
+from app.routers.files import router as files_router
 
 FRONTEND_DIR = Path(__file__).parent / "frontend" / "dist"
+UPLOADS_DIR = Path(__file__).parent / "uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- Startup ---
-    # Создаём таблицы в PostgreSQL (если их ещё нет)
     Base.metadata.create_all(bind=engine)
 
-    # Подключаемся к OSTIS (опционально)
+    from app.reminder_scheduler import start_reminder_scheduler
+    start_reminder_scheduler()
+
     try:
         from ostis_client import connect_to_ostis
         connect_to_ostis()
@@ -39,19 +42,21 @@ async def lifespan(app: FastAPI):
         print("OSTIS-зависимые эндпоинты могут не работать.")
 
     yield
-    # --- Shutdown ---
+
+
+mimetypes.init()
+mimetypes.add_type('application/javascript', '.js')
+mimetypes.add_type('application/javascript', '.mjs')
+mimetypes.add_type('text/css', '.css')
 
 
 app = FastAPI(
     title="HealthGo API",
-    description="API для веб-приложения здорового образа жизни. "
-                "Калькулятор КБЖУ, напоминания, рекомендации, "
-                "OSTIS-определения, RAG ИИ-ассистент и Google OAuth2.",
+    description="API для веб-приложения здорового образа жизни",
     version="2.0.0",
     lifespan=lifespan,
 )
 
-# CORS — разрешаем фронтенду обращаться к API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8000", "http://localhost:5173"],
@@ -60,8 +65,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# --- API роутеры ---
 app.include_router(auth_router)
 app.include_router(calories_router)
 app.include_router(reminders_router)
@@ -70,9 +73,11 @@ app.include_router(definitions_router)
 app.include_router(rag_router)
 app.include_router(weight_router)
 app.include_router(achievements_router)
+app.include_router(files_router)
 
 
-# --- Раздача фронтенда ---
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+
 if FRONTEND_DIR.exists():
     from fastapi.responses import HTMLResponse
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="static")
@@ -80,28 +85,28 @@ if FRONTEND_DIR.exists():
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
     def _inject_config(html: str) -> str:
-        """Вставляет window.__GOOGLE_CLIENT_ID__ перед </head>."""
-        config_script = (
-            f'<script>window.__GOOGLE_CLIENT_ID__ = "{GOOGLE_CLIENT_ID}";</script>'
-        )
+        config_script = f'<script>window.__GOOGLE_CLIENT_ID__ = "{GOOGLE_CLIENT_ID}";</script>'
         return html.replace("</head>", f"  {config_script}\n</head>", 1)
 
     @app.get("/{full_path:path}", tags=["Frontend"])
     async def serve_frontend(request: Request, full_path: str):
         file_path = FRONTEND_DIR / full_path
         if full_path and file_path.exists() and file_path.is_file():
-            return FileResponse(file_path)
+            media_type = mimetypes.guess_type(full_path)[0] or 'application/octet-stream'
+            return FileResponse(file_path, media_type=media_type)
+        index_path = FRONTEND_DIR / "index.html"
+        html_content = index_path.read_text(encoding="utf-8")
+        return HTMLResponse(_inject_config(html_content))
+
+    @app.get("/", tags=["Frontend"])
+    async def serve_index(request: Request):
         index_path = FRONTEND_DIR / "index.html"
         html_content = index_path.read_text(encoding="utf-8")
         return HTMLResponse(_inject_config(html_content))
 else:
     @app.get("/", tags=["Общее"])
     async def root():
-        return {
-            "message": "HealthGo API",
-            "docs": "/docs",
-            "note": "Frontend not found. Place built frontend in frontend/dist/",
-        }
+        return {"message": "HealthGo API", "docs": "/docs"}
 
 
 if __name__ == "__main__":
