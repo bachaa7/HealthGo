@@ -1,0 +1,23 @@
+{
+  "name": "HealthGo",
+  "short_name": "HealthGo",
+  "description": "Умное решение для здорового образа жизни",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "/assets/human.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/human.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "gcm_sender_id": "",
+  "gcm_api_key": ""
+}

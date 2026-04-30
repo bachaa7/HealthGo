@@ -20,6 +20,7 @@ class ReminderCreate(BaseModel):
     time: str = Field(..., pattern=r"^\d{2}:\d{2}$")
     days: list[str] = Field(default_factory=lambda: ["mon", "tue", "wed", "thu", "fri"])
     enabled: bool = True
+    notify_email: bool = False
 
 
 class ReminderUpdate(BaseModel):
@@ -27,6 +28,7 @@ class ReminderUpdate(BaseModel):
     time: Optional[str] = None
     days: Optional[list[str]] = None
     enabled: Optional[bool] = None
+    notify_email: Optional[bool] = None
 
 
 class ReminderOut(BaseModel):
@@ -35,6 +37,7 @@ class ReminderOut(BaseModel):
     time: str
     days: list[str]
     enabled: bool
+    notify_email: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -63,6 +66,7 @@ async def create_reminder(
         time=data.time,
         days=data.days,
         enabled=data.enabled,
+        notify_email=data.notify_email,
     )
     db.add(reminder)
     db.commit()

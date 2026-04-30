@@ -3,11 +3,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
-load_dotenv()
-
+load_dotenv(encoding="utf-8")
+print(repr(os.getenv("DATABASE_URL")))
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/healthgo",
+    "postgresql+psycopg://postgres:12345@localhost:5432/healthgo"
 )
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)

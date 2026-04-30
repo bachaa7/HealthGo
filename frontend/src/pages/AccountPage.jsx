@@ -17,7 +17,8 @@ export default function AccountPage() {
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
+    photo: user?.photo || '',
     gender: user?.gender || 'male',
     birthDate: user?.birth_date || '',
     height: user?.height || 175,
@@ -34,6 +35,38 @@ export default function AccountPage() {
   const [newWeight, setNewWeight] = useState('')
   const [weightLoading, setWeightLoading] = useState(false)
   const [achievements, setAchievements] = useState([])
+  const [photoUploading, setPhotoUploading] = useState(false)
+
+  // Обработка загрузки фото
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setPhotoUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/api/files/upload-photo', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      })
+      
+      if (!response.ok) throw new Error('Ошибка загрузки')
+      
+      const data = await response.json()
+      
+      if (data.photo) {
+        updateUser({ ...user, photo: data.photo })
+        setProfileData({ ...profileData, photo: data.photo })
+      }
+    } catch (err) {
+      alert('Не удалось загрузить фото')
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
 
   useEffect(() => {
     apiGet('/api/weight/')
@@ -43,6 +76,23 @@ export default function AccountPage() {
       .then(data => { if (data?.achievements) setAchievements(data.achievements) })
       .catch(() => {})
   }, [])
+
+  // Обновляем profileData когда загружается user
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        photo: user.photo || '',
+        gender: user.gender || 'male',
+        birthDate: user.birth_date || '',
+        height: user.height || 175,
+        weight: user.weight || 70,
+        activityLevel: user.activity_level || 'moderate',
+      })
+    }
+  }, [user])
 
   const handleAddWeight = async () => {
     if (!newWeight || newWeight < 20 || newWeight > 300) return
@@ -76,6 +126,8 @@ export default function AccountPage() {
     try {
       const updated = await apiPut('/api/auth/me', {
         name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
         gender: profileData.gender,
         height: Number(profileData.height),
         weight: Number(profileData.weight),
@@ -84,7 +136,8 @@ export default function AccountPage() {
       })
       updateUser(updated)
       setIsEditing(false)
-    } catch {
+      alert('Сохранено!')
+    } catch (e) {
       alert('Ошибка сохранения')
     }
   }
@@ -147,9 +200,22 @@ export default function AccountPage() {
           <div className="account-header">
             <div className="avatar-section">
               <div className="avatar">
-                <span>{profileData.name.charAt(0)}</span>
+                {profileData.photo ? (
+                  <img src={profileData.photo} alt="Фото профиля" />
+                ) : (
+                  <span>{profileData.name?.charAt(0)}</span>
+                )}
               </div>
-              <button className="avatar-change-btn" onClick={() => alert('Функция в разработке')}>Изменить фото</button>
+              <label className="avatar-change-btn">
+                {photoUploading ? 'Загрузка...' : 'Изменить фото'}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handlePhotoUpload}
+                  style={{ display: 'none' }}
+                  disabled={photoUploading}
+                />
+              </label>
             </div>
             <div className="user-info">
               <h2 className="user-name">{profileData.name}</h2>
@@ -671,15 +737,6 @@ export default function AccountPage() {
                       alert(err.message || 'Ошибка смены пароля')
                     }
                   }}>Изменить пароль</Button>
-                </div>
-
-                <h3 className="section-title section-title--margin">Двухфакторная аутентификация</h3>
-
-                <div className="security-info">
-                  <p className="security-description">
-                    Повысьте безопасность аккаунта, включив двухфакторную аутентификацию.
-                  </p>
-                  <Button variant="secondary">Включить 2FA</Button>
                 </div>
 
                 <h3 className="section-title section-title--margin">Выход</h3>
